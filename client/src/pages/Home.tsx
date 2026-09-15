@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { trpc } from "@/lib/trpc";
 import {
   ArrowRight,
   BarChart3,
@@ -110,6 +111,9 @@ const uiCopy = {
     takeStep: "Try the first one",
     footerLine: "ready.local · One useful step at a time.",
     footerNote: "Free tools for the people who keep local businesses going.",
+    saving: "Saving your check-in…",
+    saved: "Saved safely",
+    saveError: "Couldn’t save this time",
   },
   hi: {
     languageLabel: "भाषा चुनें",
@@ -162,6 +166,9 @@ const uiCopy = {
     takeStep: "पहला कदम लें",
     footerLine: "ready.local · बिना उलझन के डिजिटल अपनाना।",
     footerNote: "उन व्यवसायों के लिए मुफ़्त टूल्स से बनाया गया जो हमारी स्थानीय ज़िंदगी को चलाते हैं।",
+    saving: "आपकी जाँच सेव हो रही है…",
+    saved: "सुरक्षित रूप से सेव हो गया",
+    saveError: "इस बार सेव नहीं हो पाया",
   },
   pa: {
     languageLabel: "ਭਾਸ਼ਾ ਚੁਣੋ",
@@ -214,6 +221,9 @@ const uiCopy = {
     takeStep: "ਪਹਿਲਾ ਕਦਮ ਲਓ",
     footerLine: "ready.local · ਬਿਨਾਂ ਉਲਝਣ ਦੇ ਡਿਜ਼ਿਟਲ ਅਪਣਾਉਣਾ।",
     footerNote: "ਉਨ੍ਹਾਂ ਕਾਰੋਬਾਰਾਂ ਲਈ ਮੁਫ਼ਤ ਟੂਲਾਂ ਨਾਲ ਬਣਾਇਆ ਗਿਆ ਜੋ ਸਾਡੀਆਂ ਸਥਾਨਕ ਕਮਿਊਨਿਟੀਆਂ ਨੂੰ ਚਲਾਉਂਦੇ ਹਨ।",
+    saving: "ਤੁਹਾਡੀ ਜਾਂਚ ਸੇਵ ਹੋ ਰਹੀ ਹੈ…",
+    saved: "ਸੁਰੱਖਿਅਤ ਤਰੀਕੇ ਨਾਲ ਸੇਵ ਹੋ ਗਿਆ",
+    saveError: "ਇਸ ਵਾਰ ਸੇਵ ਨਹੀਂ ਹੋ ਸਕਿਆ",
   },
 } as const;
 
@@ -612,6 +622,8 @@ export default function Home() {
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerKey>>({});
   const [language, setLanguage] = useState<Language>("en");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const submitReadiness = trpc.readiness.submit.useMutation();
 
   const progress = step === "intro" ? 0 : step === "results" ? 100 : Math.round((current / questions.length) * 100);
   const question = questions[current];
@@ -656,6 +668,18 @@ export default function Home() {
   function nextQuestion() {
     if (!answers[question.id]) return;
     if (current === questions.length - 1) {
+      setSaveStatus("saving");
+      submitReadiness.mutate({
+        language,
+        answers,
+        categoryScores: result.categoryScores,
+        totalScore: result.total,
+        maxScore: result.max,
+        percent: result.percent,
+      }, {
+        onSuccess: () => setSaveStatus("saved"),
+        onError: () => setSaveStatus("error"),
+      });
       setStep("results");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -677,6 +701,7 @@ export default function Home() {
     setAnswers({});
     setStep("intro");
     setCurrent(0);
+    setSaveStatus("idle");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -761,7 +786,7 @@ export default function Home() {
 
       {step === "results" && (
         <section className="results-page page-wrap">
-          <div className="results-head"><div><div className="kicker"><span className="kicker-dot" /> {copy.resultsKicker}</div><h2>{copy.resultsTitle}</h2><p>{copy.resultsLead}</p></div><button className="restart-button" onClick={restart}><RefreshCcw size={15} /> {copy.retake}</button></div>
+          <div className="results-head"><div><div className="kicker"><span className="kicker-dot" /> {copy.resultsKicker}</div><h2>{copy.resultsTitle}</h2><p>{copy.resultsLead}</p></div><div className="results-actions"><span className={`save-status ${saveStatus}`}>{saveStatus === "saving" ? copy.saving : saveStatus === "saved" ? copy.saved : saveStatus === "error" ? copy.saveError : ""}</span><button className="restart-button" onClick={restart}><RefreshCcw size={15} /> {copy.retake}</button></div></div>
           <div className="score-layout">
             <div className="score-card">
               <div className="score-ring" style={{ "--score": `${result.percent * 3.6}deg` } as React.CSSProperties}><div><strong>{result.percent}</strong><span>/ 100</span></div></div>
