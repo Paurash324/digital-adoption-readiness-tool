@@ -5,7 +5,7 @@ A human-centred web tool that helps small-business owners identify one realistic
 ## Academic project
 
 - **Subject:** Design Thinking and Innovation
-- **Student:** Chiku
+- **Student:** Paurash Jha
 - **Programme:** BE CSE AI & ML
 - **Institution:** Chandigarh University
 - **Academic level:** Semester 1
