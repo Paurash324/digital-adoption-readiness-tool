@@ -14,10 +14,6 @@ A human-centred web tool that helps small-business owners identify one realistic
 
 [Open the Digital Adoption Readiness Tool](https://digital-adoption-readiness-tool.netlify.app/)
 
-## Project report
-
-The polished semester-project report is available in [`docs/Digital_Adoption_Readiness_Tool_Semester_Project_Report.pdf`](docs/Digital_Adoption_Readiness_Tool_Semester_Project_Report.pdf).
-
 ## What the tool does
 
 The tool uses a short seven-question check-in to understand a business's current digital readiness. It covers four areas:
